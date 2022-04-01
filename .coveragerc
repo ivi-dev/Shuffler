@@ -1,4 +1,5 @@
 [run]
+source = .
 branch = True
 omit =
     **/__init__.py
