@@ -14,7 +14,7 @@ class TestMain(unittest.TestCase):
         is invoked (when `__name__ == '__main__'`)."""
 
         main_fn()
-        # Confirm that two calls of the Application mock have been made
+        # Confirm that two calls of the Application class have been made
         # (the first one initializes an Application object and second to starts the GUI app)
         self.assertEqual(2, len(app.mock_calls))
         # Confirm that the call to start the GUI app has been made
