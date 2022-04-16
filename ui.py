@@ -82,26 +82,6 @@ def file_saver() -> str:
 
     return filedialog.asksaveasfilename()
 
-# class Frame(tk.Frame):
-#     """A wrapper around the tkinter's Frame_ widget.
-
-#     .. _Frame: https://tkdocs.com/shipman/frame.html
-#     """
-
-#     def __init__(self, *args, **kwargs):
-#         """Initialize a new UI frame."""
-
-#         tk.Frame.__init__(*args, **kwargs)
-
-#     def winfo_toplevel(self) -> tk.Toplevel:
-#         """Return this Frame's top level window.
-
-#         :return: This Frame's top level window.
-#         :rtype: tk.Toplevel
-#         """
-
-#         return self.winfo_toplevel()
-
 class StrBinding(tk.StringVar):
     """An object that helps bind a widget's property to a certain textual content. This class is a
     thin wrapper for the tkinter's StringVar_ and it's main purpose is to ease the initialization of
