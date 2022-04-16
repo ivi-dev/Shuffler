@@ -1,2 +1,1 @@
-COV_FILE=coverage/.coverage
-coverage run --data-file=$COV_FILE -m unittest discover
+coverage run --data-file=coverage/.coverage -m unittest discover
