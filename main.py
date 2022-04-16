@@ -337,7 +337,7 @@ class Application(ui.Frame):
         export_json(items=self.state.get('picked'), path=path)
 
     def _reset(self) -> None:
-        """"""
+        """Reset the shuffling process. Stops the shuffler and clears the list of picked items."""
 
         if self.state.get('picked'):
             restart_shuffle = False
