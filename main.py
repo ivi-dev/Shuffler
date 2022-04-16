@@ -42,6 +42,9 @@ class State:
         else:
             self.items[key] = value
 
+# class Responsive:
+# TODO: Implement a "responsive enabler" and move it to the *ui* module.
+
 class Application(ui.Frame):
     """The GUI app."""
 
@@ -106,7 +109,7 @@ class Application(ui.Frame):
         """Make this app's window resizable."""
 
         top = self.winfo_toplevel()
-        top.rowconfigure(0, weight=1)      # App's top-level windows's row (the only one)
+        top.rowconfigure(0, weight=1)      # App's top-level windows's row (the only one
         top.columnconfigure(0, weight=1)   # App's top-level windows's column (the only one)
 
         self.columnconfigure(5, weight=1)  # App's content's 6th column
@@ -120,34 +123,143 @@ class Application(ui.Frame):
         """Create the app's GUI."""
 
         # The currently visible item
-        ui.widget(ui.Label, self, textvariable=self.state.get('value'), font=('Futura', 20),
-                  grid={'columnspan': 4, 'sticky': ui.LEFT + ui.TOP})
+        current_item = ui.widget(ui.Label, self, textvariable=self.state.get('value'),
+                                 font=('Futura', 20),
+                                 grid={'columnspan': 4, 'sticky': ui.LEFT + ui.TOP})
         # The 'Import' button
-        ui.widget(ui.Button, self, text='Import', command=self._load_shuffle_list,
-                  grid={'row': 1, 'sticky': ui.H_STRETCH})
+        import_button = ui.widget(ui.Button, self, text='Import', command=self._load_shuffle_list,
+                                  grid={'row': 1, 'sticky': ui.H_STRETCH})
         # The 'Export' button
-        ui.widget(ui.Button, self, text='Export', command=self._export_picked,
-                  grid={'row': 1, 'column': 1, 'sticky': ui.H_STRETCH})
+        export_button = ui.widget(ui.Button, self, text='Export', command=self._export_picked,
+                                  grid={'row': 1, 'column': 1, 'sticky': ui.H_STRETCH})
         # The 'Start/Stop' button
-        self.state.set('shuffle_btn', ui.widget(ui.Button, self, text='Start',
-                                                command=self._toggle_shuffler,
-                                                grid={'row': 1, 'column': 2,
-                                                      'sticky': ui.H_STRETCH}))
+        start_stop_button = ui.widget(ui.Button, self, text='Start', command=self._toggle_shuffler,
+                                      grid={'row': 1, 'column': 2, 'sticky': ui.H_STRETCH})
+        self.state.set('shuffle_btn', start_stop_button)
         # The 'Pick (item)' button
-        ui.widget(ui.Button, self, text='Pick', command=self._pick_item,
-                  grid={'row': 1, 'column': 3, 'sticky': ui.H_STRETCH})
+        pick_button = ui.widget(ui.Button, self, text='Pick', command=self._pick_item,
+                                grid={'row': 1, 'column': 3, 'sticky': ui.H_STRETCH})
         # The 'Reset' button
-        ui.widget(ui.Button, self, text='Reset', command=self._reset,
-                  grid={'row': 2, 'sticky': ui.H_STRETCH})
+        reset_button = ui.widget(ui.Button, self, text='Reset', command=self._reset,
+                                grid={'row': 2, 'sticky': ui.H_STRETCH + ui.TOP})
         # The 'Quit' button
-        ui.widget(ui.Button, self, text='Quit', command=self.quit,
-                  grid={'row': 2, 'column': 1, 'sticky': ui.LEFT})
+        quit_button = ui.widget(ui.Button, self, text='Quit', command=self.quit,
+                                grid={'row': 2, 'column': 1, 'sticky': ui.H_STRETCH + ui.TOP})
         # The list of picked items
         ui.widget(ui.Frame, self, width=10, grid={'column': 4})  # Left spacer (10px)
-        self.state.set('picked_items_container', ui.List(
+        picked_items_list = ui.List(
             parent=self, items=self.state.get('picked'), bg='lightgrey', height=5, relief=ui.SUNKEN,
             grid={'row': 0, 'column': 5, 'rowspan': 3, 'sticky': ui.FULL_STRETCH},
-            scroll_grid={'rowspan': 3}))
+            scroll_grid={'rowspan': 3})
+        self.state.set('picked_items_container', picked_items_list)
+
+        # TODO: Integrate with a *"responsive enabler"*.
+        self.responsive_widgets = {'labels': [current_item],
+                                   'buttons': [import_button, export_button, start_stop_button,
+                                               pick_button, reset_button, quit_button],
+                                   'secondary_text': [picked_items_list]}
+        # At each app main window resize, keep the UI's size consistent with that window's.
+        self.rescale_map = {
+            'default': {
+                'from': 0,
+                'to': 800,
+                'font_size': {
+                    'labels': 20,
+                    # 'buttons': 12,
+                    'buttons': 'auto',
+                    'secondary_text': 12
+                },
+                'size': {
+                    'labels': {
+                        'width': 'auto',
+                        'height': 'auto'
+                    },
+                    # 'buttons': {
+                    #     'width': 6,
+                    #     'height': 1
+                    # },
+                    'buttons': 'auto',
+                    'secondary_text': {
+                        'width': 'auto',
+                        'height': 'auto'
+                    }
+                }
+            },
+            'medium': {
+                'from': 800,
+                'to': 1500,
+                'font_size': {
+                    'labels': 80,
+                    # 'buttons': 20,
+                    'buttons': 'auto',
+                    'secondary_text': 25
+                },
+                'size': {
+                    'labels': {
+                        'width': 'auto',
+                        'height': 'auto'
+                    },
+                    # 'buttons': {
+                    #     'width': 10,
+                    #     'height': 2
+                    # },
+                    'buttons': 'auto',
+                    'secondary_text': {
+                        'width': 'auto',
+                        'height': 'auto'
+                    }
+                }
+            },
+            'large': {
+                'from': 1500,
+                'to': 3500,
+                'font_size': {
+                    'labels': 120,
+                    # 'buttons': 30,
+                    'buttons': 'auto',
+                    'secondary_text': 45
+                },
+                'size': {
+                    'labels': {
+                        'width': 'auto',
+                        'height': 'auto'
+                    },
+                    # 'buttons': {
+                    #     'width': 20,
+                    #     'height': 2
+                    # },
+                    'buttons': 'auto',
+                    'secondary_text': {
+                        'width': 'auto',
+                        'height': 'auto'
+                    }
+                }
+            },
+        }
+        self.bind('<Configure>', lambda event: self._rescale_ui(event.width))
+
+    # TODO: This should be a part of the *"responsive enabler"*.
+    def _rescale_ui(self, width: int) -> None:
+        """Keep the UI elements' size consistent with the app's current width.
+
+        :param width: The app's current width.
+        :type width: int
+        """
+
+        for breakpoint_ in self.rescale_map.values():
+            from_, to_, font_size, size = breakpoint_['from'], breakpoint_['to'], \
+                                          breakpoint_['font_size'], breakpoint_['size']
+            if from_ <= width <= to_:
+                for category, widgets in self.responsive_widgets.items():
+                    for widget in widgets:
+                        if font_size[category] != 'auto':
+                            widget['font'] = 'Futura', font_size[category]
+                        if size[category] != 'auto':
+                            if size[category]['width'] != 'auto':
+                                widget['width'] = size[category]['width']
+                            if size[category]['height'] != 'auto':
+                                widget['height'] = size[category]['height']
+                break
 
     def _toggle_shuffler(self) -> None:
         """Start/stop shuffling."""
@@ -270,11 +382,12 @@ class Application(ui.Frame):
         else:
             if not self.state.get('shuffle_list_filepath'):
                 self.state.set('shuffle_list_filepath', ui.file_chooser())
-        with open(self.state.get('shuffle_list_filepath'), encoding='utf-8') as file:
-            lines = [line.strip(' \n') for line in file.readlines()]
-            self.state.set('shuffle_list', list(set(filter(lambda line: line.strip(), lines))))
-            self.state.set('value', lambda it: it.set(f'{len(self.state.get("shuffle_list"))} '
-                                                       'items loaded. Ready to start.'))
+        if self.state.get('shuffle_list_filepath'):
+            with open(self.state.get('shuffle_list_filepath'), encoding='utf-8') as file:
+                lines = [line.strip(' \n') for line in file.readlines()]
+                self.state.set('shuffle_list', list(set(filter(lambda line: line.strip(), lines))))
+                self.state.set('value', lambda it: it.set(f'{len(self.state.get("shuffle_list"))} '
+                                                           'items loaded. Ready to start.'))
 
     def _export_picked(self) -> None:
         """Export the list of picked items to a file."""
