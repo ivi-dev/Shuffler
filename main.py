@@ -2,7 +2,7 @@
 
 import random
 import os
-from typing import Optional, Union
+from typing import Dict, Optional, Tuple, Union
 import ui
 from data_export.plain import export as export_plain
 from data_export.xml   import export as export_xml
@@ -42,10 +42,7 @@ class State:
         else:
             self.items[key] = value
 
-# class Responsive:
-# TODO: Implement a "responsive enabler" and move it to the *ui* module.
-
-class Application(ui.Frame):
+class Application(ui.Frame, ui.Responsive):
     """The GUI app."""
 
     def __init__(self):
@@ -76,7 +73,22 @@ class Application(ui.Frame):
         })
         self._setup_layout(minwidth=520, minheight=110)
         self.grid(sticky=ui.FULL_STRETCH)
-        self._create_widgets()
+        widgets = self._create_widgets()
+        breakpoints = (
+            ui.Breakpoint(
+                'default', ui.Bounds(0, 800), (
+                    ui.UISpec(widgets['current_item'], {'font': ('Futura', 20)}),
+                    ui.UISpec(widgets['picked_items_list'], {'font': ('Futura', 12)}))),
+            ui.Breakpoint(
+                'medium', ui.Bounds(800, 1500), (
+                    ui.UISpec(widgets['current_item'], {'font': ('Futura', 80)}),
+                    ui.UISpec(widgets['picked_items_list'], {'font': ('Futura', 25)}))),
+            ui.Breakpoint(
+                'large', ui.Bounds(1500, 3500), (
+                    ui.UISpec(widgets['current_item'], {'font': ('Futura', 120)}),
+                    ui.UISpec(widgets['picked_items_list'], {'font': ('Futura', 45)}))),
+        )
+        ui.Responsive.__init__(self, breakpoints, self)
 
     def _setup_layout(self, minwidth: int, minheight: int) -> None:
         """Setup some general app layout parameters.
@@ -99,7 +111,7 @@ class Application(ui.Frame):
         :type minheight: int
         """
 
-        window = self.winfo_toplevel()
+        window = super().winfo_toplevel()
         window.title('Shuffler')
         window.minsize(minwidth, minheight)
         window['padx'] = 10
@@ -119,7 +131,7 @@ class Application(ui.Frame):
 
         self.mainloop()
 
-    def _create_widgets(self) -> None:
+    def _create_widgets(self) -> Dict[str, Tuple[ui.Widget]]:
         """Create the app's GUI."""
 
         # The currently visible item
@@ -145,121 +157,24 @@ class Application(ui.Frame):
         # The 'Quit' button
         quit_button = ui.widget(ui.Button, self, text='Quit', command=self.quit,
                                 grid={'row': 2, 'column': 1, 'sticky': ui.H_STRETCH + ui.TOP})
+        ui.widget(ui.Frame, self, width=10, grid={'column': 4})  # 10px vertical spacer
         # The list of picked items
-        ui.widget(ui.Frame, self, width=10, grid={'column': 4})  # Left spacer (10px)
         picked_items_list = ui.List(
             parent=self, items=self.state.get('picked'), bg='lightgrey', height=5, relief=ui.SUNKEN,
             grid={'row': 0, 'column': 5, 'rowspan': 3, 'sticky': ui.FULL_STRETCH},
             scroll_grid={'rowspan': 3})
         self.state.set('picked_items_container', picked_items_list)
-
-        # TODO: Integrate with a *"responsive enabler"*.
-        self.responsive_widgets = {'labels': [current_item],
-                                   'buttons': [import_button, export_button, start_stop_button,
-                                               pick_button, reset_button, quit_button],
-                                   'secondary_text': [picked_items_list]}
-        # At each app main window resize, keep the UI's size consistent with that window's.
-        self.rescale_map = {
-            'default': {
-                'from': 0,
-                'to': 800,
-                'font_size': {
-                    'labels': 20,
-                    # 'buttons': 12,
-                    'buttons': 'auto',
-                    'secondary_text': 12
-                },
-                'size': {
-                    'labels': {
-                        'width': 'auto',
-                        'height': 'auto'
-                    },
-                    # 'buttons': {
-                    #     'width': 6,
-                    #     'height': 1
-                    # },
-                    'buttons': 'auto',
-                    'secondary_text': {
-                        'width': 'auto',
-                        'height': 'auto'
-                    }
-                }
-            },
-            'medium': {
-                'from': 800,
-                'to': 1500,
-                'font_size': {
-                    'labels': 80,
-                    # 'buttons': 20,
-                    'buttons': 'auto',
-                    'secondary_text': 25
-                },
-                'size': {
-                    'labels': {
-                        'width': 'auto',
-                        'height': 'auto'
-                    },
-                    # 'buttons': {
-                    #     'width': 10,
-                    #     'height': 2
-                    # },
-                    'buttons': 'auto',
-                    'secondary_text': {
-                        'width': 'auto',
-                        'height': 'auto'
-                    }
-                }
-            },
-            'large': {
-                'from': 1500,
-                'to': 3500,
-                'font_size': {
-                    'labels': 120,
-                    # 'buttons': 30,
-                    'buttons': 'auto',
-                    'secondary_text': 45
-                },
-                'size': {
-                    'labels': {
-                        'width': 'auto',
-                        'height': 'auto'
-                    },
-                    # 'buttons': {
-                    #     'width': 20,
-                    #     'height': 2
-                    # },
-                    'buttons': 'auto',
-                    'secondary_text': {
-                        'width': 'auto',
-                        'height': 'auto'
-                    }
-                }
-            },
+        self.bind('<Configure>', lambda _: self._rescale())
+        return {
+            'current_item': current_item,
+            'import_button': import_button,
+            'export_button': export_button,
+            'start_stop_button': start_stop_button,
+            'pick_button': pick_button,
+            'reset_button': reset_button,
+            'quit_button': quit_button,
+            'picked_items_list': picked_items_list
         }
-        self.bind('<Configure>', lambda event: self._rescale_ui(event.width))
-
-    # TODO: This should be a part of the *"responsive enabler"*.
-    def _rescale_ui(self, width: int) -> None:
-        """Keep the UI elements' size consistent with the app's current width.
-
-        :param width: The app's current width.
-        :type width: int
-        """
-
-        for breakpoint_ in self.rescale_map.values():
-            from_, to_, font_size, size = breakpoint_['from'], breakpoint_['to'], \
-                                          breakpoint_['font_size'], breakpoint_['size']
-            if from_ <= width <= to_:
-                for category, widgets in self.responsive_widgets.items():
-                    for widget in widgets:
-                        if font_size[category] != 'auto':
-                            widget['font'] = 'Futura', font_size[category]
-                        if size[category] != 'auto':
-                            if size[category]['width'] != 'auto':
-                                widget['width'] = size[category]['width']
-                            if size[category]['height'] != 'auto':
-                                widget['height'] = size[category]['height']
-                break
 
     def _toggle_shuffler(self) -> None:
         """Start/stop shuffling."""
@@ -387,7 +302,7 @@ class Application(ui.Frame):
                 lines = [line.strip(' \n') for line in file.readlines()]
                 self.state.set('shuffle_list', list(set(filter(lambda line: line.strip(), lines))))
                 self.state.set('value', lambda it: it.set(f'{len(self.state.get("shuffle_list"))} '
-                                                           'items loaded. Ready to start.'))
+                                                           'items loaded.'))
 
     def _export_picked(self) -> None:
         """Export the list of picked items to a file."""

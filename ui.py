@@ -7,8 +7,10 @@ widgets.
 
 import tkinter as tk
 from tkinter import filedialog
+from typing import Dict, Iterable, Tuple
 
 # Widget types
+Widget = tk.Widget
 Frame = tk.Frame
 Label = tk.Label
 Button = tk.Button
@@ -99,6 +101,73 @@ class StrBinding(tk.StringVar):
 
         super().__init__()
         self.set(val)
+
+class Bounds:
+    """A range of values delimited by a start *(lower)* and an end *(upper)*."""
+
+    def __init__(self, lower: int, upper: int) -> None:
+        """Initialize a new bound."""
+
+        self.lower = lower
+        self.upper = upper
+
+class UISpec:
+    """A description of a UI widget's desired properties."""
+
+    def __init__(self, widget_: Widget, props: Dict[str, str]) -> None:
+        """"""
+
+        self.widget = widget_
+        self.props = props
+
+class Breakpoint:
+    """Rules that control what happens to UI widgets when an app's window changes into a certain
+    size. Similar to CSS breakpoints_.
+
+    .. _breakpoints: https://www.w3schools.com/howto/howto_css_media_query_breakpoints.asp
+    """
+
+    def __init__(
+        self, name: str, bounds: Bounds, specs: Iterable[UISpec]) -> None:
+        """Initialize a new breakpoint."""
+
+        super().__init__()
+        self._name = name
+        self.bounds = bounds
+        self.specs = specs
+
+class Responsive:
+    """A responsive UI. Change UI widgets' properties, like font size, to keep them consisten with
+    their owning app's changing size."""
+
+    def __init__(self, breakpoints: Iterable[Breakpoint], app: Widget) -> None:
+        """Initialize a new responsive UI.
+
+        :param widgets: The UI widgets to work on.
+        :type widgets: Iterable[Widget]
+        :param breakpoints: The instructions to follow when modifying `widgets`.
+        :type breakpoints: Iterable[Breakpoint]
+        :param app: The *widgets*' owning app.
+        :type app: Widget
+        """
+
+        self._breakpoints = breakpoints
+        self._app = app
+
+    def _rescale(self) -> None:
+        """Rescale widgets to keep the UI elements' size consistent with the app's current width.
+
+        :param width: The app's current width.
+        :type width: int
+        """
+
+
+        for breakpoint_ in self._breakpoints:
+            if breakpoint_.bounds.lower <= self._app.winfo_width() <= breakpoint_.bounds.upper:
+                for spec in breakpoint_.specs:
+                    for prop, value in spec.props.items():
+                        spec.widget[prop] = value
+                break
 
 class NamedList(tk.LabelFrame):
     """A UI widget with a title, and the ability to display items as a list."""
